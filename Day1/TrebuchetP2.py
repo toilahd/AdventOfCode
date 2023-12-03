@@ -2,7 +2,7 @@ import re
 
 lines = []
 
-with open("./Day1/data.txt") as file:
+with open("./data.txt") as file:
     lines = file.readlines()
 
 
