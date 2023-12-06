@@ -2,6 +2,8 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <tuple>
+#include <algorithm>
 
 using namespace std;
 
@@ -17,54 +19,37 @@ bool isDigit(char c){
 }
 
 int part1(const vector<string> engines){
-    int sum = 0;  // Initialize the sum to accumulate the result.
-
-    // Outer loop iterating over each row of the grid.
+    int sum = 0;  
     for (int i = 0; i < engines.size(); ++i){
-        int numStart = -1;  // Variable to track the starting position of a digit sequence.
-        bool found = false;  // Flag to indicate if a neighboring non-digit character is found.
-
-        // Inner loop iterating over each column of the current row.
+        int numStart = -1; 
+        bool found = false; 
         for (int j = 0; j < engines[i].length(); ++j){
-            // Check if the current character is a digit.
             if (isDigit(engines[i][j])){
-                // If numStart is -1, it means this is the start of a new digit sequence.
                 if (numStart == -1){
                     numStart = j;
                 }
 
-                // If found is false, check for neighboring non-digit characters.
                 if (!found){
-                    // Iterate over predefined neighbors.
                     for (auto  n : neighbors){
-                        // Calculate new coordinates based on the current position and neighbor offsets.
                         int x = i + n[0];
                         int y = j + n[1];
-
-                        // Check if the new coordinates are within valid bounds for the grid.
                         if (x < 0 || x >= engines.size() || y < 0  || y >= engines[i].size()){
                             continue;
                         }
-
-                        // Check if the character at the neighboring position is not a dot and not a digit.
                         if (engines[x][y] != '.' && !isDigit(engines[x][y])){
-                            found = true;  // Set found to true if a neighboring non-digit character is found.
-                            break;  // Break out of the loop, as one neighboring non-digit character is sufficient.
+                            found = true;  
+                            break; 
                         }
                     }
                 }
             } else if (numStart != -1) {
-                // If the current character is not a digit and numStart is not -1, it means the end of a digit sequence.
                 if (found) {
-                    // If a neighboring non-digit character was found, add the digit sequence to the sum.
                     sum += stoi(engines[i].substr(numStart, j - numStart));
                 }
-                found = false;  // Reset found flag.
-                numStart = -1;  // Reset numStart, indicating no active digit sequence.
+                found = false;  
+                numStart = -1; 
             }
         }
-
-        // Check for an incomplete digit sequence at the end of the row.
         if (numStart !=  -1) {
             if (found){
                 sum += stoi(engines[i].substr(numStart));
@@ -72,8 +57,77 @@ int part1(const vector<string> engines){
         }
     }
 
-    return sum;  // Return the final sum.
+    return sum;  
 }
+
+int part2(const vector<string> engines){
+    int sum = 0;
+
+    // Loop through each row of the engines
+    for (size_t i = 0; i < engines.size(); i++){
+        // Loop through each character in the current row
+        for (size_t j = 0; j < engines[i].length(); j++){
+            // Check if the current character is not '*'
+            if (engines[i][j] != '*'){
+                continue;  // Skip to the next character if not '*'
+            }
+
+            // Initialize vectors to store numbers and their positions
+            vector<int> numbers;
+            vector<tuple<size_t, size_t>> numbersPos;
+
+            // Loop through neighboring positions
+            for (auto neigh : neighbors){
+                int x = neigh[0] + i;
+                int y = neigh[1] + j;
+
+                // Check if the neighboring position is within bounds
+                if (x < 0 || x >= engines.size() || y < 0 || y >= engines[i].length()){
+                    continue;
+                }
+
+                // Check if the character at the neighboring position is a digit
+                if (isDigit(engines[x][y])){
+                    // Move to the beginning of the digit sequence
+                    while (y >= 0 && isDigit(engines[x][y])){
+                        y--;
+                    }
+                    if (y < 0 || !isDigit(engines[x][y])){
+                        y++;
+                    }
+
+                    // Store the position and parse the number
+                    tuple<size_t, size_t> pos(x, y);
+                    if (find(numbersPos.begin(), numbersPos.end(), pos) == numbersPos.end()) {
+                        numbersPos.push_back(pos);
+                        size_t start = y;
+                        
+                        // Move to the end of the digit sequence
+                        while (y < engines[x].size() && isDigit(engines[x][y])){
+                            y++;
+                        } 
+                        
+                        // Adjust position to the last digit
+                        if (x == engines[y].size() || !isDigit(engines[x][y])){
+                            y--;
+                        }
+
+                        // Convert the substring to an integer and add to the numbers vector
+                        numbers.push_back(stoi(engines[x].substr(start, y - start + 1)));
+                    }
+                }
+            }
+
+            // If there are exactly two numbers, add their product to the sum
+            if (numbers.size() == 2){
+                sum += numbers[0] * numbers[1];
+            }
+        }
+    }
+
+    return sum;
+}
+
 
 int main(){
     ifstream ifs("data.txt");
@@ -83,6 +137,8 @@ int main(){
         engines.push_back(line);
     }
     int p1  = part1(engines);
-    cout << p1;
+    cout << p1 << endl;
+    int p2 = part2(engines);
+    cout << p2;
     return 0;
 }

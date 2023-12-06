@@ -3,6 +3,9 @@
         "iosfwd": "cpp",
         "sstream": "cpp",
         "regex": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "*.tcc": "cpp",
+        "vector": "cpp",
+        "ostream": "cpp"
     }
 }
